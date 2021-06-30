@@ -5,9 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"time"
 )
+
+var word = [...]string{"Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"}
 
 func initial(r io.Reader) <-chan string {
 	ch := make(chan string)
@@ -23,14 +26,21 @@ func initial(r io.Reader) <-chan string {
 	return ch
 }
 
+func question(l int) string {
+	rand.Seed(time.Now().UnixNano())
+
+	return word[rand.Intn(l)]
+}
+
 func Do(input io.Reader) chan string {
 	ich := initial(input)
 
 	msg := make(chan string)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 
-	// var score int
+	var score int
+	len := len(word)
 
 	go func() {
 		defer cancel()
@@ -38,16 +48,24 @@ func Do(input io.Reader) chan string {
 
 		msg <- "Game start!"
 		for {
+			q := question(len)
+			msg <- q
 			select {
 			case <-ctx.Done():
 				goto ENDGAME
-			case <-ich:
-				fmt.Println("foo")
+			case a := <-ich:
+				if q == a {
+					msg <- "Correct!"
+					score++
+				} else {
+					msg <- "Wrong..."
+				}
 			}
 		}
 	ENDGAME:
 
-		msg <- ("Finished!")
+		msg <- "Finished!"
+		msg <- fmt.Sprintf("Your Score: %d", score)
 	}()
 
 	return msg
