@@ -1,4 +1,4 @@
-package main
+package typeGame
 
 import (
 	"bufio"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
 	"time"
 )
 
@@ -69,17 +68,4 @@ func Do(input io.Reader) chan string {
 	}()
 
 	return msg
-}
-
-func main() {
-	msg := Do(os.Stdin)
-
-	for {
-		message, ok := <-msg
-		if ok {
-			fmt.Println(message)
-		} else {
-			break
-		}
-	}
 }
